@@ -1,3 +1,4 @@
+import 'package:fantasy_flex/src/core/data/data_source.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -60,6 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+    FFDataSource().getElementTypes();
   }
 
   @override
