@@ -1,5 +1,7 @@
+import 'package:either_dart/either.dart';
 import 'package:fantasy_flex/src/core/data/data_source.dart';
 import 'package:flutter/material.dart';
+import 'package:fantasy_flex/src/core/data/dtos/player.dart';
 
 void main() {
   runApp(const MyApp());
@@ -51,8 +53,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  int _count = 0;
 
-  void _incrementCounter() {
+  void _incrementCounter() async {
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
@@ -61,7 +64,10 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
-    FFDataSource().getElementTypes();
+    final result = await FFDataSource().getGeneralData();
+    if (result.isRight) {
+      setState(() {});
+    }
   }
 
   @override
@@ -78,41 +84,34 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
+      body: FutureBuilder(
+        future: FFDataSource().getGeneralData(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final data = snapshot.data;
+            if (data!.isRight) {
+              List<dynamic> rawElementList = data.right!.data['elements'];
+              List<Player> allPlayers = [];
+              for (var element in rawElementList) {
+                final item = PlayerMapper.fromMap(element);
+                allPlayers.add(item);
+              }
+
+              return ListView.builder(
+                  itemCount: allPlayers.length,
+                  itemBuilder: (context, index) {
+                    final player = allPlayers[index];
+                    return ListTile(
+                      title: Text(player.firstName.toString()),
+                      subtitle: Text(player.webName.toString()),
+                    );
+                  });
+            }
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

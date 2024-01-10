@@ -56,7 +56,6 @@ extension DioX on Dio {
     Map<String, dynamic> queryParameters = const {},
     Options? options,
   }) async {
-    print(options!.headers);
     try {
       Response? response = await switch (method) {
         RequestMethod.get =>
